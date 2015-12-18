@@ -1,28 +1,29 @@
-/*eslint-env node*/
-'use strict';
+/*eslint-env node es6*/
+
+//
+// Imports
+import fs from 'fs-extra';
+import runSequence from 'run-sequence';
+import path from 'path';
+import gulp from 'gulp';
 
 // Gulp plugins
-var gulp = require('gulp'),
-    connect = require('gulp-connect'),
-    sourcemaps = require('gulp-sourcemaps'),
-    to5 = require('gulp-6to5'),
-    less = require('gulp-less'),
-    minifyCss = require('gulp-minify-css'),
-    clean = require('gulp-clean'),
-    eslint = require('gulp-eslint'),
-
-    fs = require('fs-extra'),
-    runSequence = require('run-sequence'),
-    path = require('path');
+import connect from 'gulp-connect';
+import sourcemaps from 'gulp-sourcemaps';
+import babel from 'gulp-babel';
+import less from 'gulp-less';
+import minifyCss from 'gulp-minify-css';
+import clean from 'gulp-clean';
+import eslint from 'gulp-eslint';
 
 // Path definition
-var buildPath = path.resolve('./build'),
-    sourcePath = 'app';
+const buildPath = path.resolve('./build');
+const sourcePath = 'source';
 
 /**
  * Livereload server on buildPath
  */
-gulp.task('connect', function () {
+gulp.task('connect', () => {
     connect.server({
         livereload: true,
         root: buildPath,
@@ -36,7 +37,7 @@ gulp.task('connect', function () {
  * 		* JavaScript
  * 		* LESS
  */
-gulp.task('watch', function () {
+gulp.task('watch', () => {
     gulp.watch([sourcePath + '/**/*.html'], ['html']);
     gulp.watch([sourcePath + '/**/*.js'], ['scripts', 'lint']);
     gulp.watch([sourcePath + '/**/*.less'], ['styles']);
@@ -45,7 +46,7 @@ gulp.task('watch', function () {
 /**
  * Purify buildPath and create build folder
  */
-gulp.task('clean', function () {
+gulp.task('clean', () => {
     return gulp.src(buildPath, {read: false})
         .pipe(clean())
         .on('end', function () {
@@ -56,7 +57,7 @@ gulp.task('clean', function () {
 /**
  * Clean all HTML files in buildPath
  */
-gulp.task('clean-html', function () {
+gulp.task('clean-html', () => {
     return gulp.src(buildPath + '/**/*.html')
         .pipe(clean());
 });
@@ -65,7 +66,7 @@ gulp.task('clean-html', function () {
  * HTML build task:
  * 		* Copies HTML files to buildPath
  */
-gulp.task('html', ['clean-html'], function () {
+gulp.task('html', ['clean-html'], () => {
     return gulp.src(sourcePath + '/**/*.html')
         .pipe(gulp.dest(buildPath))
         .pipe(connect.reload());
@@ -74,7 +75,7 @@ gulp.task('html', ['clean-html'], function () {
 /**
  * Clean all JavaScript files in buildPath
  */
-gulp.task('clean-scripts', function () {
+gulp.task('clean-scripts', () => {
     return gulp.src(buildPath + '/**/*.js')
         .pipe(clean());
 });
@@ -85,10 +86,12 @@ gulp.task('clean-scripts', function () {
  * 		* Creates sourcemaps
  * 		* Copies compiled files to buildPath
  */
-gulp.task('scripts', ['clean-scripts'], function () {
+gulp.task('scripts', ['clean-scripts'], () => {
     return gulp.src(sourcePath + '/**/*.js')
         .pipe(sourcemaps.init())
-        .pipe(to5())
+        .pipe(babel({
+            presets: ['es2015']
+        }))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(buildPath))
         .pipe(connect.reload());
@@ -97,7 +100,7 @@ gulp.task('scripts', ['clean-scripts'], function () {
 /**
  * Clean all Less files in buildPath
  */
-gulp.task('clean-styles', function () {
+gulp.task('clean-styles', () => {
     return gulp.src(buildPath + '/**/*.less')
         .pipe(clean());
 });
@@ -108,8 +111,8 @@ gulp.task('clean-styles', function () {
  * 		* Minifies CSS
  * 		* Copies compiled files to buildPath
  */
-gulp.task('styles', ['clean-styles'], function () {
-    return gulp.src(sourcePath + '/**/*.less')
+gulp.task('styles', ['clean-styles'], () => {
+    return gulp.src(sourcePath + '/**/main.less')
         .pipe(less())
         .pipe(minifyCss())
         .pipe(gulp.dest(buildPath))
@@ -117,19 +120,9 @@ gulp.task('styles', ['clean-styles'], function () {
 });
 
 /**
- * Vendor build task:
- * 		* Copies vendor files to buildPath
- */
-gulp.task('vendor', function () {
-    // var vendorPath = path.resolve(buildPath, 'vendor');
-    // gulp.src('./node_modules/gulp/**/*.js')
-    //     .pipe(gulp.dest(vendorPath));
-});
-
-/**
  * Linting task
  */
-gulp.task('lint', function () {
+gulp.task('lint', () => {
     return gulp.src([sourcePath + '/**/*.js'])
         .pipe(eslint())
         .pipe(eslint.format());
@@ -143,8 +136,8 @@ gulp.task('lint', function () {
  * 		* scripts
  * 		* styles
  */
-gulp.task('build', function (cb) {
-    runSequence('clean', ['vendor', 'html', 'lint', 'scripts', 'styles'], cb);
+gulp.task('build', (cb) => {
+    runSequence('clean', ['html', 'lint', 'scripts', 'styles'], cb);
 });
 
 /**
