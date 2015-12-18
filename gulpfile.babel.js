@@ -15,18 +15,28 @@ import less from 'gulp-less';
 import minifyCss from 'gulp-minify-css';
 import clean from 'gulp-clean';
 import eslint from 'gulp-eslint';
+import uglify from 'gulp-uglify';
+import concat from 'gulp-concat';
+import rename from 'gulp-rename';
 
-// Path definition
-const buildPath = path.resolve('./build');
-const sourcePath = 'source';
+// Path and file definition
+const dir = {
+    build: path.resolve('./build'),
+    source: 'source'
+};
+
+const file = {
+    scripts: 'script.min.js',
+    styles: 'style.min.css'
+}
 
 /**
- * Livereload server on buildPath
+ * Livereload server on dir.build
  */
 gulp.task('connect', () => {
     connect.server({
         livereload: true,
-        root: buildPath,
+        root: dir.build,
         port: 8080
     });
 });
@@ -38,45 +48,45 @@ gulp.task('connect', () => {
  * 		* LESS
  */
 gulp.task('watch', () => {
-    gulp.watch([sourcePath + '/**/*.html'], ['html']);
-    gulp.watch([sourcePath + '/**/*.js'], ['scripts', 'lint']);
-    gulp.watch([sourcePath + '/**/*.less'], ['styles']);
+    gulp.watch([dir.source + '/**/*.html'], ['html']);
+    gulp.watch([dir.source + '/**/*.js'], ['scripts', 'lint']);
+    gulp.watch([dir.source + '/**/*.less'], ['styles']);
 });
 
 /**
- * Purify buildPath and create build folder
+ * Purify dir.build and create build folder
  */
 gulp.task('clean', () => {
-    return gulp.src(buildPath, {read: false})
+    return gulp.src(dir.build, {read: false})
         .pipe(clean())
         .on('end', function () {
-            fs.mkdirsSync(buildPath);
+            fs.mkdirsSync(dir.build);
         });
 });
 
 /**
- * Clean all HTML files in buildPath
+ * Clean all HTML files in dir.build
  */
 gulp.task('clean-html', () => {
-    return gulp.src(buildPath + '/**/*.html')
+    return gulp.src(dir.build + '/**/*.html')
         .pipe(clean());
 });
 
 /**
  * HTML build task:
- * 		* Copies HTML files to buildPath
+ * 		* Copies HTML files to dir.build
  */
 gulp.task('html', ['clean-html'], () => {
-    return gulp.src(sourcePath + '/**/*.html')
-        .pipe(gulp.dest(buildPath))
+    return gulp.src(dir.source + '/**/*.html')
+        .pipe(gulp.dest(dir.build))
         .pipe(connect.reload());
 });
 
 /**
- * Clean all JavaScript files in buildPath
+ * Clean all JavaScript files in dir.build
  */
 gulp.task('clean-scripts', () => {
-    return gulp.src(buildPath + '/**/*.js')
+    return gulp.src(dir.build + '/**/*.js')
         .pipe(clean());
 });
 
@@ -84,24 +94,26 @@ gulp.task('clean-scripts', () => {
  * JavaScript build task:
  * 		* Converts ecmascript 6 to 5
  * 		* Creates sourcemaps
- * 		* Copies compiled files to buildPath
+ * 		* Copies compiled files to dir.build
  */
 gulp.task('scripts', ['clean-scripts'], () => {
-    return gulp.src(sourcePath + '/**/*.js')
+    return gulp.src(dir.source + '/**/*.js')
         .pipe(sourcemaps.init())
         .pipe(babel({
             presets: ['es2015']
         }))
+        .pipe(uglify())
         .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest(buildPath))
+        .pipe(concat(file.scripts))
+        .pipe(gulp.dest(dir.build))
         .pipe(connect.reload());
 });
 
 /**
- * Clean all Less files in buildPath
+ * Clean all Less files in dir.build
  */
 gulp.task('clean-styles', () => {
-    return gulp.src(buildPath + '/**/*.less')
+    return gulp.src(dir.build + '/**/*.less')
         .pipe(clean());
 });
 
@@ -109,13 +121,14 @@ gulp.task('clean-styles', () => {
  * LESS build task:
  * 		* Converts LESS to CSS
  * 		* Minifies CSS
- * 		* Copies compiled files to buildPath
+ * 		* Copies compiled files to dir.build
  */
 gulp.task('styles', ['clean-styles'], () => {
-    return gulp.src(sourcePath + '/**/main.less')
+    return gulp.src(dir.source + '/**/main.less')
         .pipe(less())
         .pipe(minifyCss())
-        .pipe(gulp.dest(buildPath))
+        .pipe(rename(file.styles))
+        .pipe(gulp.dest(dir.build))
         .pipe(connect.reload());
 });
 
@@ -123,7 +136,7 @@ gulp.task('styles', ['clean-styles'], () => {
  * Linting task
  */
 gulp.task('lint', () => {
-    return gulp.src([sourcePath + '/**/*.js'])
+    return gulp.src([dir.source + '/**/*.js'])
         .pipe(eslint())
         .pipe(eslint.format());
 });
