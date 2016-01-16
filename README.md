@@ -19,4 +19,5 @@ Use ``gulp`` and start the development.
 * ``html`` (HTML build)
 * ``scripts`` (Scripts build)
 * ``styles`` (Styles build)
-* ``vendor`` (Vendor build)
+* ``statics`` (Statics build)
+* ``deploy`` (Deploy to remote server)
