@@ -20,4 +20,5 @@ Use ``gulp`` and start the development.
 * ``scripts`` (Scripts build)
 * ``styles`` (Styles build)
 * ``statics`` (Statics build)
-* ``deploy`` (Deploy to remote server)
+* ``preview`` (Deploy to remote preview server via docker)
+* ``publish`` (Deploy to remote publish server via ftp)

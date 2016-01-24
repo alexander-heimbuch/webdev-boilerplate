@@ -48,10 +48,18 @@ const deploy = {
     port: 8080
 };
 
+// Publish Server settings
+const publish = {
+    host:       'ftp-server',
+    user:       'ftp-user',
+    password:   'ftp-password',
+    path:       '/publish-directory'
+};
+
 /**
- * Deploy and build site
+ * Deploy and build site on preview server
  */
-gulp.task('deploy', ['build'], () => {
+gulp.task('preview', ['build'], () => {
     return gulp.src(dir.build)
         .pipe(exec(`ssh ${deploy.server} rm -rf ${project}`))
         .pipe(exec(`ssh ${deploy.server} mkdir -p ${project}`))
@@ -60,6 +68,19 @@ gulp.task('deploy', ['build'], () => {
         .pipe(exec(`scp build.sh ${deploy.server}:${project}/build.sh`))
         .pipe(exec(`ssh ${deploy.server} "cd ${project} && sh build.sh ${project} ${deploy.port}"`))
         .pipe(exec.reporter());
+});
+
+/**
+ * Publish to FTP
+ */
+gulp.task('publish', ['build'], () => {
+    let server = ftp.create(Object.assign({
+        log:        util.log
+    }, publish));
+
+    return gulp.src(path.join(dir.build, '**', '*'))
+        .pipe(server.newer(publish.path))
+        .pipe(server.dest(publish.path));
 });
 
 
