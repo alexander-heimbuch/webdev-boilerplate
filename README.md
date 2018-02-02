@@ -1,5 +1,7 @@
 # Gulp Webdev Boilerplate
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/alexander-heimbuch/webdev-boilerplate.svg)](https://greenkeeper.io/)
+
 ## Quickstart
 
 Create a directory for your new web project. Run this script inside your project directory:
